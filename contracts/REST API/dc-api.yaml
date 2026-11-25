@@ -1,0 +1,129 @@
+openapi: 3.0.3
+info:
+  title: DC REST API
+  version: 0.1.0
+  description: "Draft DC\u2013CT integration; base URL is illustrative."
+servers:
+- url: http://localhost:8080/rest/integration/v1
+paths:
+  /orders:
+    post:
+      operationId: incoming_order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/incoming_order'
+            example:
+              order_id: 1001
+              quantity: 50
+              arrival_time_at_dc: 20
+              truck_id: 301
+              control_tower_id: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/outgoing_order_response'
+              example:
+                order_id: 1001
+                dock_id: 2
+                start_loading_time: 20
+                estimated_departure_time: 25
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflicting order or state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Dependency temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    incoming_order:
+      type: object
+      required:
+      - order_id
+      - quantity
+      - arrival_time_at_dc
+      - truck_id
+      - control_tower_id
+      additionalProperties: false
+      properties:
+        order_id:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+          description: Globally unique order ID, allocated by CT for this interface.
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+          description: Positive integer standard quantity units.
+        arrival_time_at_dc:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+          description: Expected arrival, absolute tick.
+        truck_id:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+          description: Globally unique truck ID.
+        control_tower_id:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+          description: CT instance ID.
+    outgoing_order_response:
+      type: object
+      required:
+      - order_id
+      - dock_id
+      - start_loading_time
+      - estimated_departure_time
+      additionalProperties: false
+      properties:
+        order_id:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+          description: Globally unique order ID, allocated by CT for this interface.
+        dock_id:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+          description: DC-local dock ID.
+        start_loading_time:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+          description: Planned loading start, absolute tick.
+        estimated_departure_time:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+          description: Planned departure, absolute tick.
+    Error:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
