@@ -16,6 +16,7 @@ jobs:
     deploy:
         runs-on: ubuntu-latest
         permissions:
+            actions: read
             contents: read
             pages: write
             id-token: write
@@ -32,17 +33,35 @@ jobs:
                   cp asyncapi/index.html _site/asyncapi/index.html
                   cp 'contracts/REST API/dc-api.yaml' 'contracts/REST API/ct-api.yaml' '_site/contracts/REST API/'
                   cp contracts/RabbitMQ/dc-asyncapi.yaml contracts/RabbitMQ/ct-asyncapi.yaml _site/contracts/RabbitMQ/
-            - uses: actions/upload-pages-artifact@v4
+            - uses: actions/upload-pages-artifact@v5
               id: upload
               with:
                   path: _site
-            - name: Verify Pages artifact upload
+                  name: github-pages-${{ github.run_attempt }}
+            - name: Wait for Pages artifact to be listed
               env:
+                  GH_TOKEN: ${{ github.token }}
                   ARTIFACT_ID: ${{ steps.upload.outputs.artifact_id }}
+                  ARTIFACT_NAME: github-pages-${{ github.run_attempt }}
               run: |
                   if [ -z "$ARTIFACT_ID" ]; then
                     echo '::error::The Pages upload step did not return an artifact ID. Check the upload logs.'
                     exit 1
                   fi
-            - uses: actions/deploy-pages@v4
+                  for attempt in {1..12}; do
+                    if ids=$(gh api --method GET \
+                        "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" \
+                        -f "name=$ARTIFACT_NAME" --jq '.artifacts[] | select(.expired == false) | .id'); then
+                      if grep -Fxq -- "$ARTIFACT_ID" <<< "$ids"; then
+                        echo "Pages artifact $ARTIFACT_NAME ($ARTIFACT_ID) is listed."
+                        exit 0
+                      fi
+                    fi
+                    if [ "$attempt" -lt 12 ]; then sleep 5; fi
+                  done
+                  echo "::error::Uploaded artifact $ARTIFACT_NAME ($ARTIFACT_ID) is not listed for this workflow run."
+                  exit 1
+            - uses: actions/deploy-pages@v5
               id: deployment
+              with:
+                  artifact_name: github-pages-${{ github.run_attempt }}
