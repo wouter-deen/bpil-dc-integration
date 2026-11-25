@@ -154,7 +154,7 @@ components:
                     - dock_id
                     - start_loading_time
                     - estimated_departure_time
-                    - schedule_revision
+
                 additionalProperties: false
                 properties:
                     order_id:
@@ -177,20 +177,14 @@ components:
                         minimum: 0
                         maximum: 2147483647
                         description: Planned departure, absolute tick.
-                    schedule_revision:
-                        type: integer
-                        minimum: 2
-                        maximum: 2147483647
-                        description:
-                            Monotonically increasing schedule version; initial REST response
-                            implicitly version 1.
+
             examples:
                 - payload:
                       order_id: 1001
                       dock_id: 2
                       start_loading_time: 23
                       estimated_departure_time: 28
-                      schedule_revision: 2
+
         outgoing_loading_confirmation:
             name: outgoing_loading_confirmation
             payload:
