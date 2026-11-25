@@ -1,3 +1,7 @@
+# Communication with DCs
+
+How control towers (CTs) can communicate with distribution centers (DCs) and vice versa is described in the [integration contract](docs/integration-contract.md).
+
 # BPIL Integration Contracts
 
 - [REST API docs (Swagger UI)](https://wouter-deen.github.io/bpil-dc-integration/): use the dropdown to switch between the DC and CT OpenAPI contracts. Try it out is disabled because the server URLs are illustrative localhost endpoints.
