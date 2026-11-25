@@ -8,16 +8,16 @@ Staging and loading are the primary tasks of DCs. Truck location tracking and de
 
 ## Service catalogue
 
-| Message (DC perspective)                   | Sender → receiver | Transport                 | Trigger                                   |
-| ------------------------------------------ | ----------------- | ------------------------- | ----------------------------------------- |
-| OrderCreated                               | CT → DC           | REST POST /orders         | Assigned truck and expected arrival known |
-| LoadingScheduleCreated                     | DC → CT           | REST response             | Initial schedule calculated               |
-| LoadingScheduleUpdated                     | CT → DC           | RabbitMQ                  | Expected arrival changes                  |
-| TruckETAUpdated                            | DC → CT           | RabbitMQ                  | Planned dock/start/departure changes      |
-| LoadingCompleted                           | DC → CT           | RabbitMQ                  | Loading actually completes                |
-| HandlingTimeRequest / HandlingTimeResponse | DC ↔ CT           | REST POST /handling-times | DC needs staging/loading durations        |
-| TruckArrived                               | CT → DC           | RabbitMQ                  | Truck physically reaches DC               |
-| TruckLoaded                                | DC → CT           | RabbitMQ                  | Truck has finished loading and departed   |
+| Message (DC perspective) | Sender → receiver | Transport                 | Trigger                                   |
+| ------------------------ | ----------------- | ------------------------- | ----------------------------------------- |
+| OrderCreated             | CT → DC           | REST POST /orders         | Assigned truck and expected arrival known |
+| LoadingScheduleCreated   | DC → CT           | REST response             | Initial schedule calculated               |
+| LoadingScheduleUpdated   | CT → DC           | RabbitMQ                  | Expected arrival changes                  |
+| TruckETAUpdated          | DC → CT           | RabbitMQ                  | Planned dock/start/departure changes      |
+| HandlingTimeRequest      | DC → CT           | REST POST /handling-times | DC needs staging/loading durations        |
+| HandlingTimeResponse     | CT → DC           | REST response             | Staging/loading times calculated          |
+| TruckArrived             | CT → DC           | RabbitMQ                  | Truck physically reaches DC               |
+| LoadingCompleted         | DC → CT           | RabbitMQ                  | Loading actually completes                |
 
 ## Lifecycle from DC perspective
 
@@ -44,6 +44,8 @@ Use of standard units:
 ### Rules for standard units
 
 #### Staging and loading
+
+The case description requires the CT to determine handling times. We propose that they use the following deterministic rules.
 
 1. Staging a quantity $q$ of goods takes $t_s = \lceil q / 2 \rceil$ ticks. E.g., an order of $q = 100$ QU takes 50 ticks to stage.
 2. Loading a quantity $q$ of goods takes $t_l = \lceil q / 5 \rceil$ ticks. E.g., an order of $q = 100$ QU takes 20 ticks to load.
