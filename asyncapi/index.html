@@ -4,29 +4,76 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BPIL RabbitMQ Contracts</title>
+  <style></style>
+    body {
+      margin: 0;
+      background: #f4f6fa;
+      color: #17243b;
+      font: 1rem/1.5 system-ui, sans-serif;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem 1.5rem;
+      padding: .875rem clamp(1rem, 4vw, 3rem);
+      background: #17243b;
+    }
+
+    nav a { color: #fff; }
+    a { color: #154e9c; text-underline-offset: .2em; }
+    a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+
+    main {
+      max-width: 76rem;
+      margin-inline: auto;
+      padding: clamp(1rem, 4vw, 3rem);
+    }
+
+    h1 { margin: 0 0 1.5rem; font-size: clamp(1.75rem, 4vw, 2.5rem); }
+
+    .contract {
+      margin-block-end: 1.5rem;
+      background: #fff;
+      border: 1px solid #d5deea;
+      border-radius: .75rem;
+    }
+
+    .contract-header {
+      padding: 1rem clamp(1rem, 3vw, 2rem);
+      border-bottom: 1px solid #d5deea;
+    }
+
+    .contract-header h2 { margin: 0 0 .25rem; font-size: 1.25rem; }
+    asyncapi-component { display: block; }
+  </style>
   <script defer src="https://cdn.jsdelivr.net/npm/@asyncapi/web-component@3.1.8/lib/asyncapi-web-component.js"></script>
 </head>
 <body>
   <nav aria-label="API documentation">
-    <a href="../">REST APIs (Swagger UI)</a> |
-    <a href="#dc">DC RabbitMQ contract</a> |
+    <a href="../">REST APIs (Swagger UI)</a>
+    <a href="#dc">DC RabbitMQ contract</a>
     <a href="#ct">CT RabbitMQ contract</a>
   </nav>
   <main>
     <h1>BPIL RabbitMQ Contracts</h1>
     <noscript>Enable JavaScript to render the AsyncAPI documentation.</noscript>
-    <section aria-labelledby="dc">
-      <h2 id="dc">DC RabbitMQ contract</h2>
-      <p><a href="../contracts/RabbitMQ/dc-asyncapi.yaml">DC AsyncAPI YAML</a></p>
+    <section class="contract" aria-labelledby="dc">
+      <header class="contract-header">
+        <h2 id="dc">DC RabbitMQ contract</h2>
+        <a href="../contracts/RabbitMQ/dc-asyncapi.yaml">View DC AsyncAPI YAML</a>
+      </header>
       <asyncapi-component
         schemaUrl="../contracts/RabbitMQ/dc-asyncapi.yaml"
         config='{"schemaID":"dc"}'
         cssImportPath="https://cdn.jsdelivr.net/npm/@asyncapi/react-component@3.2.3/styles/default.min.css">
       </asyncapi-component>
     </section>
-    <section aria-labelledby="ct">
-      <h2 id="ct">CT RabbitMQ contract</h2>
-      <p><a href="../contracts/RabbitMQ/ct-asyncapi.yaml">CT AsyncAPI YAML</a></p>
+    <section class="contract" aria-labelledby="ct">
+      <header class="contract-header">
+        <h2 id="ct">CT RabbitMQ contract</h2>
+        <a href="../contracts/RabbitMQ/ct-asyncapi.yaml">View CT AsyncAPI YAML</a>
+      </header>
       <asyncapi-component
         schemaUrl="../contracts/RabbitMQ/ct-asyncapi.yaml"
         config='{"schemaID":"ct"}'
