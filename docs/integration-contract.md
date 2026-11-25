@@ -26,7 +26,9 @@ Staging and loading are the primary tasks of DCs. Truck location tracking and de
 3. CT publishes ETA revisions and DC recalculates schedules as needed. DC publishes changed loading schedules (e.g., changed dock or changed time). CT forwards latest schedule to TC.
 4. CT publishes actual arrival. DC loads only when truck is present, staging complete, and a dock is available. Late arrival may change the schedule.
 5. DC publishes confirmation after loading completes. The CT may then authorize onward movement, but CT must wait for all orders assigned to a truck at this DC before departure in case of consolidated orders (multiple orders in one truck).
+6.
 
+> [!NOTE]
 > Note that loading may only begin once the truck's actual arrival has been confirmed, regardless of its estimated arrival time (ETA).
 
 ## General rules & using standard units
@@ -64,6 +66,7 @@ The case description requires the CT to determine handling times. We propose tha
 
 #### Costs and revenue
 
+> [!WARNING]
 > The rules below are applicable to TCs and CTs, not DCs. Since this integration contract is written from the DC perspective, CTs and TCs are expected to discuss and finalize these rules among themselves. Note that CTs and DCs do NOT have money, nor do they earn it. CUs are ONLY relevant for selecting the cheapest TC to transport (an) order(s). This is an abstraction, we do not aim to mimic the real world.
 
 12. Operating a truck costs 1 CU per DU travelled, regardless of its load. Both loaded and empty journeys incur this cost.
