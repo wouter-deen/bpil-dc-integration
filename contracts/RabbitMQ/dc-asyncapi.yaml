@@ -1,0 +1,214 @@
+asyncapi: 3.0.0
+info:
+  title: DC RabbitMQ interface
+  version: 0.1.0
+  description: Draft; example instance IDs 1. See topology document for queue bindings.
+servers:
+  lab:
+    host: localhost:5672
+    protocol: amqp
+    protocolVersion: 0-9-1
+defaultContentType: application/json
+channels:
+  arrivalUpdate:
+    address: dc.1.arrival.update
+    messages:
+      incoming_order_update:
+        $ref: '#/components/messages/incoming_order_update'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: scm.v1
+          type: direct
+          durable: true
+          autoDelete: false
+          vhost: /
+        bindingVersion: 0.3.0
+  actualArrival:
+    address: dc.1.arrival.actual
+    messages:
+      actual_arrival:
+        $ref: '#/components/messages/actual_arrival'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: scm.v1
+          type: direct
+          durable: true
+          autoDelete: false
+          vhost: /
+        bindingVersion: 0.3.0
+  scheduleUpdate:
+    address: ct.1.schedule.update
+    messages:
+      outgoing_order_update:
+        $ref: '#/components/messages/outgoing_order_update'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: scm.v1
+          type: direct
+          durable: true
+          autoDelete: false
+          vhost: /
+        bindingVersion: 0.3.0
+  loadingConfirmation:
+    address: ct.1.loading.confirmation
+    messages:
+      outgoing_loading_confirmation:
+        $ref: '#/components/messages/outgoing_loading_confirmation'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: scm.v1
+          type: direct
+          durable: true
+          autoDelete: false
+          vhost: /
+        bindingVersion: 0.3.0
+operations:
+  receiveArrivalUpdate:
+    action: receive
+    channel:
+      $ref: '#/channels/arrivalUpdate'
+    messages:
+    - $ref: '#/channels/arrivalUpdate/messages/incoming_order_update'
+  receiveActualArrival:
+    action: receive
+    channel:
+      $ref: '#/channels/actualArrival'
+    messages:
+    - $ref: '#/channels/actualArrival/messages/actual_arrival'
+  sendScheduleUpdate:
+    action: send
+    channel:
+      $ref: '#/channels/scheduleUpdate'
+    messages:
+    - $ref: '#/channels/scheduleUpdate/messages/outgoing_order_update'
+  sendLoadingConfirmation:
+    action: send
+    channel:
+      $ref: '#/channels/loadingConfirmation'
+    messages:
+    - $ref: '#/channels/loadingConfirmation/messages/outgoing_loading_confirmation'
+components:
+  messages:
+    incoming_order_update:
+      name: incoming_order_update
+      payload:
+        type: object
+        required:
+        - order_id
+        - arrival_time_at_dc
+        - arrival_revision
+        additionalProperties: false
+        properties:
+          order_id:
+            type: integer
+            minimum: 1
+            maximum: 2147483647
+            description: Globally unique order ID, allocated by CT for this interface.
+          arrival_time_at_dc:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+            description: Expected arrival, absolute tick.
+          arrival_revision:
+            type: integer
+            minimum: 1
+            maximum: 2147483647
+            description: Monotonically increasing ETA update version, starting at
+              1.
+      examples:
+      - payload:
+          order_id: 1001
+          arrival_time_at_dc: 23
+          arrival_revision: 1
+    actual_arrival:
+      name: actual_arrival
+      payload:
+        type: object
+        required:
+        - order_id
+        - actual_arrival_time_at_dc
+        additionalProperties: false
+        properties:
+          order_id:
+            type: integer
+            minimum: 1
+            maximum: 2147483647
+            description: Globally unique order ID, allocated by CT for this interface.
+          actual_arrival_time_at_dc:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+            description: Actual arrival, absolute tick.
+      examples:
+      - payload:
+          order_id: 1001
+          actual_arrival_time_at_dc: 23
+    outgoing_order_update:
+      name: outgoing_order_update
+      payload:
+        type: object
+        required:
+        - order_id
+        - dock_id
+        - start_loading_time
+        - estimated_departure_time
+        - schedule_revision
+        additionalProperties: false
+        properties:
+          order_id:
+            type: integer
+            minimum: 1
+            maximum: 2147483647
+            description: Globally unique order ID, allocated by CT for this interface.
+          dock_id:
+            type: integer
+            minimum: 1
+            maximum: 2147483647
+            description: DC-local dock ID.
+          start_loading_time:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+            description: Planned loading start, absolute tick.
+          estimated_departure_time:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+            description: Planned departure, absolute tick.
+          schedule_revision:
+            type: integer
+            minimum: 2
+            maximum: 2147483647
+            description: Monotonically increasing schedule version; initial REST response
+              implicitly version 1.
+      examples:
+      - payload:
+          order_id: 1001
+          dock_id: 2
+          start_loading_time: 23
+          estimated_departure_time: 28
+          schedule_revision: 2
+    outgoing_loading_confirmation:
+      name: outgoing_loading_confirmation
+      payload:
+        type: object
+        required:
+        - order_id
+        additionalProperties: false
+        properties:
+          order_id:
+            type: integer
+            minimum: 1
+            maximum: 2147483647
+            description: Globally unique order ID, allocated by CT for this interface.
+      examples:
+      - payload:
+          order_id: 1001
