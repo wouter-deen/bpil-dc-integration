@@ -1,0 +1,46 @@
+body {
+    margin: 0;
+}
+
+.docs-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem clamp(0.75rem, 3vw, 2rem);
+    padding: 0.75rem clamp(1rem, 4vw, 3rem);
+    background: #17243b;
+    color: #fff;
+    font: 600 0.9375rem/1.5 system-ui, sans-serif;
+}
+
+.docs-nav__brand {
+    font-weight: 700;
+}
+
+.docs-nav__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+
+.docs-nav a {
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+    color: #dce7f8;
+    text-decoration: none;
+}
+
+.docs-nav a:hover {
+    background: #2b4060;
+    color: #fff;
+}
+
+.docs-nav a[aria-current="page"] {
+    background: #e7efff;
+    color: #17243b;
+}
+
+.docs-nav a:focus-visible {
+    outline: 2px solid #9bc6ff;
+    outline-offset: 2px;
+}

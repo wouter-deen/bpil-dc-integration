@@ -29,7 +29,7 @@ jobs:
             - name: Stage Swagger UI, AsyncAPI docs, and contracts
               run: |
                   mkdir -p '_site/contracts/REST API' _site/contracts/RabbitMQ _site/asyncapi
-                  cp swagger/index.html _site/index.html
+                  cp swagger/index.html swagger/nav.css _site/
                   cp asyncapi/index.html _site/asyncapi/index.html
                   cp 'contracts/REST API/dc-api.yaml' 'contracts/REST API/ct-api.yaml' '_site/contracts/REST API/'
                   cp contracts/RabbitMQ/dc-asyncapi.yaml contracts/RabbitMQ/ct-asyncapi.yaml _site/contracts/RabbitMQ/

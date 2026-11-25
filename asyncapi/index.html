@@ -4,6 +4,7 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>BPIL RabbitMQ Contracts</title>
+        <link rel="stylesheet" href="../nav.css" />
         <style>
             body {
                 margin: 0;
@@ -14,16 +15,11 @@
                     sans-serif;
             }
 
-            nav {
+            .contract-links {
                 display: flex;
                 flex-wrap: wrap;
-                gap: 0.5rem 1.5rem;
-                padding: 0.875rem clamp(1rem, 4vw, 3rem);
-                background: #17243b;
-            }
-
-            nav a {
-                color: #fff;
+                gap: 0.5rem 1rem;
+                margin: 0 0 1.5rem;
             }
             a {
                 color: #154e9c;
@@ -71,13 +67,22 @@
         ></script>
     </head>
     <body>
-        <nav aria-label="API documentation">
-            <a href="../">REST APIs (Swagger UI)</a>
-            <a href="#dc">DC RabbitMQ contract</a>
-            <a href="#ct">CT RabbitMQ contract</a>
+        <nav class="docs-nav" aria-label="API documentation">
+            <span class="docs-nav__brand">BPIL Integration Docs</span>
+            <div class="docs-nav__links">
+                <a href="../">REST (Swagger)</a>
+                <a href="./" aria-current="page">RabbitMQ (AsyncAPI)</a>
+            </div>
         </nav>
         <main>
             <h1>BPIL RabbitMQ Contracts</h1>
+            <nav
+                class="contract-links"
+                aria-label="RabbitMQ contracts on this page"
+            >
+                <a href="#dc">DC RabbitMQ contract</a>
+                <a href="#ct">CT RabbitMQ contract</a>
+            </nav>
             <noscript
                 >Enable JavaScript to render the AsyncAPI
                 documentation.</noscript
