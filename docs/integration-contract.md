@@ -8,28 +8,25 @@ Staging and loading are the primary tasks of DCs. Truck location tracking and de
 
 ## Service catalogue
 
-| Message (DC perspective) | Sender → receiver | Transport                 | Trigger                                   |
-| ------------------------ | ----------------- | ------------------------- | ----------------------------------------- |
-| OrderCreated             | CT → DC           | REST POST /orders         | Assigned truck and expected arrival known |
-| LoadingScheduleCreated   | DC → CT           | REST response             | Initial schedule calculated               |
-| LoadingScheduleUpdated   | CT → DC           | RabbitMQ                  | Expected arrival changes                  |
-| TruckETAUpdated          | DC → CT           | RabbitMQ                  | Planned dock/start/departure changes      |
-| HandlingTimeRequest      | DC → CT           | REST POST /handling-times | DC needs staging/loading durations        |
-| HandlingTimeResponse     | CT → DC           | REST response             | Staging/loading times calculated          |
-| TruckArrived             | CT → DC           | RabbitMQ                  | Truck physically reaches DC               |
-| LoadingCompleted         | DC → CT           | RabbitMQ                  | Loading actually completes                |
+| Message (DC perspective) | Sender → receiver | Transport         | Trigger                                   |
+| ------------------------ | ----------------- | ----------------- | ----------------------------------------- |
+| OrderCreated             | CT → DC           | REST POST /orders | Assigned truck and expected arrival known |
+| LoadingScheduleCreated   | DC → CT           | REST response     | Initial schedule calculated               |
+| LoadingScheduleUpdated   | CT → DC           | RabbitMQ          | Expected arrival changes                  |
+| TruckETAUpdated          | DC → CT           | RabbitMQ          | Planned dock/start/departure changes      |
+| TruckArrived             | CT → DC           | RabbitMQ          | Truck physically reaches DC               |
+| LoadingCompleted         | DC → CT           | RabbitMQ          | Loading actually completes                |
 
 ## Lifecycle from DC perspective
 
-1. CT posts order to DC. DC obtains handling times, plans staging and reserves a dock slot, persists initial schedule, returns HTTP 200.
+1. CT sends the order with staging and loading durations in `POST /orders`. DC uses those durations to plan staging and reserve a dock slot, persists the initial schedule, and returns HTTP 200.
 2. CT forwards the schedule (dock and time) to the relevant TC. DC stages goods in advance when feasible to reduce truck queue waiting time.
 3. CT publishes ETA revisions and DC recalculates schedules as needed. DC publishes changed loading schedules (e.g., changed dock or changed time). CT forwards latest schedule to TC.
-4. CT publishes actual arrival. DC loads only when truck is present, staging complete, and a dock is available. Late arrival may change the schedule.
+4. CT publishes actual arrival. DC loads only when truck is present, staging complete, and a dock is available. If actual arrival changes dock availability or loading plans, DC may reschedule the arriving order and other affected orders. DC publishes one schedule update per changed order, using that order’s `order_id`.
 5. DC publishes confirmation after loading completes. The CT may then authorize onward movement, but CT must wait for all orders assigned to a truck at this DC before departure in case of consolidated orders (multiple orders in one truck).
-6.
 
 > [!NOTE]
-> Note that loading may only begin once the truck's actual arrival has been confirmed, regardless of its estimated arrival time (ETA).
+> Note that loading may only begin once the truck's actual arrival has been confirmed, regardless of its estimated arrival time (ETA). In our simulation, we only care about the 'happy' flow, and not the 'sad' flow, meaning we expect every operation to succeed. This keeps us focused on the main task: showcasing business process integration, not full realism.
 
 ## General rules & using standard units
 
@@ -47,7 +44,7 @@ Use of standard units:
 
 #### Staging and loading
 
-The case description requires the CT to determine handling times. We propose that they use the following deterministic rules.
+The case description requires the CT to determine handling times. The CT includes both durations in the initial `new_order` payload. We propose the following deterministic rules.
 
 1. Staging a quantity $q$ of goods takes $t_s = \lceil q / 2 \rceil$ ticks. E.g., an order of $q = 100$ QU takes 50 ticks to stage.
 2. Loading a quantity $q$ of goods takes $t_l = \lceil q / 5 \rceil$ ticks. E.g., an order of $q = 100$ QU takes 20 ticks to load.
@@ -79,7 +76,7 @@ The case description requires the CT to determine handling times. We propose tha
 - `actual_arrival_time_at_dc` is a confirmed physical arrival.
 - `start_loading_time` is estimated as well, not actual.
 - `estimated_departure_time` must be at least start + loading duration. `dock_id` identifies the planned dock
-- `staging_duration` and `loading_duration` are tick counts; CT may randomize them, but repeat requests for the same order and quantity return the same result during a run.
+- `staging_duration` and `loading_duration` are required durations in ticks. `staging_duration` may be zero, and `loading_duration` must be positive.
 
 ## Communication rules
 

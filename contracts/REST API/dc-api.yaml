@@ -9,6 +9,7 @@ paths:
     /orders:
         post:
             operationId: new_order
+            description: Creates a new order. The Control Tower determines staging and loading durations according to the case description and includes them in the initial order.
             requestBody:
                 required: true
                 content:
@@ -18,7 +19,9 @@ paths:
                         example:
                             order_id: 1001
                             quantity: 50
-                            arrival_time_at_dc: 20
+                            staging_duration: 25
+                            loading_duration: 10
+                            arrival_time_at_dc: 30
                             truck_id: 301
                             control_tower_id: 1
             responses:
@@ -31,8 +34,8 @@ paths:
                             example:
                                 order_id: 1001
                                 dock_id: 2
-                                start_loading_time: 20
-                                estimated_departure_time: 25
+                                start_loading_time: 30
+                                estimated_departure_time: 40
                 "400":
                     description: Invalid payload
                     content:
@@ -58,6 +61,8 @@ components:
             required:
                 - order_id
                 - quantity
+                - staging_duration
+                - loading_duration
                 - arrival_time_at_dc
                 - truck_id
                 - control_tower_id
@@ -73,6 +78,16 @@ components:
                     minimum: 1
                     maximum: 2147483647
                     description: Positive integer standard quantity units.
+                staging_duration:
+                    type: integer
+                    minimum: 0
+                    maximum: 2147483647
+                    description: Staging duration in ticks.
+                loading_duration:
+                    type: integer
+                    minimum: 1
+                    maximum: 2147483647
+                    description: Positive loading duration in ticks.
                 arrival_time_at_dc:
                     type: integer
                     minimum: 0

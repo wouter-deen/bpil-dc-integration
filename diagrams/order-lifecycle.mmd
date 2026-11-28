@@ -1,0 +1,35 @@
+sequenceDiagram
+    participant TC as Transport Company
+    participant CT as Control Tower
+    participant DC as Distribution Center
+    participant MQ as RabbitMQ
+    CT->>DC: POST /orders (new_order with handling times)
+    DC->>DC: Plan staging, reserve a dock slot, and persist schedule
+    DC-->>CT: 200 new_order_response
+    CT->>TC: Relay dock and planned times
+    Note over DC: Stage goods before arrival when feasible
+    loop ETA changes before arrival
+        CT->>MQ: Publish to dc.1.arrival.update
+        MQ-->>DC: incoming_order_update (arrival_time_at_dc)
+        DC->>DC: Recalculate schedule as needed
+        opt Schedule changed
+            DC->>MQ: Publish to ct.1.schedule.update
+            MQ-->>CT: outgoing_order_update
+            CT->>TC: Relay updated schedule
+        end
+    end
+    CT->>MQ: Publish to dc.1.arrival.actual
+    MQ-->>DC: actual_arrival (actual_arrival_time_at_dc)
+    DC->>DC: Recalculate schedules for the arriving order and any other affected orders
+    loop For each order whose schedule changed after actual arrival
+        DC->>MQ: Publish to ct.1.schedule.update
+        MQ-->>CT: outgoing_order_update (affected order_id)
+        CT->>TC: Relay updated schedule to the relevant TC
+    end
+    DC->>DC: Load only after confirmed arrival, staging completion, and dock availability
+    DC->>MQ: Publish to ct.1.loading.confirmation
+    MQ-->>CT: outgoing_loading_confirmation
+    Note over CT: Wait for loading confirmations for all orders on this truck at this DC
+    opt CT authorizes onward movement
+        CT->>TC: Authorize departure
+    end

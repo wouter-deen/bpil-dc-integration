@@ -1,0 +1,24 @@
+---
+config:
+    layout: grid
+    htmlLabels: false
+    grid:
+        rowGap: 95
+        columnGap: 100
+---
+flowchart TB
+    TC[Transport Company]@{ row: 1, column: 1 }
+    CT[Control Tower]@{ row: 2, column: 1 }
+    DC[Distribution Center]@{ row: 2, column: 3 }
+    MQ[(RabbitMQ direct exchange)]@{ row: 3, column: 2 }
+    CTQ[bpil.ct.1.in]@{ row: 4, column: 1 }
+    DCQ[bpil.dc.1.in]@{ row: 4, column: 3 }
+
+    TC <-->|Separate CT-TC agreement| CT
+    CT -->|POST /orders with handling times| DC
+    CT -->|dc.1.arrival.update<br/>dc.1.arrival.actual| MQ
+    DC -->|ct.1.schedule.update<br/>ct.1.loading.confirmation| MQ
+    MQ --> DCQ
+    MQ --> CTQ
+    DCQ -->|ETA updates and actual arrivals| DC
+    CTQ -->|Schedule updates and loading confirmations| CT
