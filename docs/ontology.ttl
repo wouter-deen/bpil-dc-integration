@@ -1,0 +1,50 @@
+@prefix : <https://wouter-deen.github.io/bpil-dc-integration/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://wouter-deen.github.io/bpil-dc-integration/ontology> a owl:Ontology ;
+    rdfs:label "BPIL integration ontology"@en ;
+    rdfs:comment "Domain concepts and relationships. OpenAPI and AsyncAPI remain authoritative for wire validation."@en .
+
+:Actor a owl:Class .
+:DistributionCenter a owl:Class ; rdfs:subClassOf :Actor ; rdfs:label "Distribution Center (DC)"@en .
+:ControlTower a owl:Class ; rdfs:subClassOf :Actor ; rdfs:label "Control Tower (CT)"@en .
+:TransportCompany a owl:Class ; rdfs:subClassOf :Actor ; rdfs:label "Transport Company (TC)"@en .
+:Customer a owl:Class ; rdfs:subClassOf :Actor .
+:Order a owl:Class ; rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :assignedTruck ; owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass :Truck ] .
+:Truck a owl:Class .
+:LoadingDock a owl:Class .
+:LoadingSchedule a owl:Class .
+:DockSlot a owl:Class .
+:Bid a owl:Class .
+:Activity a owl:Class .
+:Tendering a owl:Class ; rdfs:subClassOf :Activity .
+:Consolidation a owl:Class ; rdfs:subClassOf :Activity .
+:Staging a owl:Class ; rdfs:subClassOf :Activity .
+:Loading a owl:Class ; rdfs:subClassOf :Activity ;
+    rdfs:comment "May start only after confirmed arrival and completed staging, when a dock is available."@en .
+:Journey a owl:Class ; rdfs:subClassOf :Activity .
+:Unloading a owl:Class ; rdfs:subClassOf :Activity .
+:FullTruckload a owl:Class ; rdfs:subClassOf :Truckload ; rdfs:comment "Exactly 100 QU."@en .
+:LessThanTruckload a owl:Class ; rdfs:subClassOf :Truckload ; rdfs:comment "Less than 100 QU."@en .
+:Truckload a owl:Class .
+
+:assignsOrder a owl:ObjectProperty ; rdfs:domain :ControlTower ; rdfs:range :Order .
+:assignedTruck a owl:ObjectProperty ; rdfs:domain :Order ; rdfs:range :Truck .
+:carriesOrder a owl:ObjectProperty ; rdfs:domain :Truck ; rdfs:range :Order ; owl:inverseOf :assignedTruck ;
+    rdfs:comment "Represents the order assignment, not evidence that loading has finished."@en .
+:tracksTruck a owl:ObjectProperty ; rdfs:domain :ControlTower ; rdfs:range :Truck .
+:operatesTruck a owl:ObjectProperty ; rdfs:domain :TransportCompany ; rdfs:range :Truck .
+:managesSchedule a owl:ObjectProperty ; rdfs:domain :DistributionCenter ; rdfs:range :LoadingSchedule .
+:hasDock a owl:ObjectProperty ; rdfs:domain :DistributionCenter ; rdfs:range :LoadingDock .
+:schedulesOrder a owl:ObjectProperty ; rdfs:domain :LoadingSchedule ; rdfs:range :Order .
+:plannedDock a owl:ObjectProperty ; rdfs:domain :LoadingSchedule ; rdfs:range :LoadingDock .
+:reservesSlot a owl:ObjectProperty ; rdfs:domain :LoadingSchedule ; rdfs:range :DockSlot .
+:slotAtDock a owl:ObjectProperty ; rdfs:domain :DockSlot ; rdfs:range :LoadingDock .
+
+:Unit a owl:Class .
+:QU a owl:NamedIndividual, :Unit ; rdfs:label "Standard quantity unit"@en .
+:DU a owl:NamedIndividual, :Unit ; rdfs:label "Standard distance unit"@en .
+:CU a owl:NamedIndividual, :Unit ; rdfs:label "Standard cost unit"@en .
+:Second a owl:NamedIndividual, :Unit ; rdfs:label "Second"@en .

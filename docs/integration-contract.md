@@ -2,20 +2,24 @@
 
 Version 0.1.0 | Proposed for agreement
 
+This contract follows the concepts and relationships defined in the [BPIL integration ontology](ontology.md).
+
 ## Scope and responsibilities
 
 Staging and loading are the primary tasks of DCs. Truck location tracking and determination of handling durations is done by CTs. All DC communication is with CTs. CTs relay relevant information to the executing TC, so DC never calls a TC. Tendering and consolidation (i.e., selecting the cheapest transport company for a given order) is managed by the CTs.
 
 ## Service catalogue
 
-| Message (DC perspective) | Sender → receiver | Transport         | Trigger                                   |
-| ------------------------ | ----------------- | ----------------- | ----------------------------------------- |
-| OrderCreated             | CT → DC           | REST POST /orders | Assigned truck and expected arrival known |
-| LoadingScheduleCreated   | DC → CT           | REST response     | Initial schedule calculated               |
-| LoadingScheduleUpdated   | CT → DC           | RabbitMQ          | Expected arrival changes                  |
-| TruckETAUpdated          | DC → CT           | RabbitMQ          | Planned dock/start/departure changes      |
-| TruckArrived             | CT → DC           | RabbitMQ          | Truck physically reaches DC               |
-| LoadingCompleted         | DC → CT           | RabbitMQ          | Loading actually completes                |
+The catalogue names are business labels. In particular, `LoadingScheduleUpdated` carries a revised ETA from the CT, while `TruckETAUpdated` carries a revised loading schedule from the DC. Use the schema or message name when looking up payloads in [OpenAPI](../contracts/REST%20API/dc-api.yaml) or AsyncAPI ([DC](../contracts/RabbitMQ/dc-asyncapi.yaml), [CT](../contracts/RabbitMQ/ct-asyncapi.yaml)). Use the receiving group’s number on Canvas as the numeric segment of each RabbitMQ routing key. The examples below use group `1`. See the [RabbitMQ topology](rabbitmq-setup.md) for queue bindings.
+
+| Catalogue name           | Sender → receiver | Schema or message name          | Endpoint or routing key              | Trigger                                                     |
+| ------------------------ | ----------------- | ------------------------------- | ------------------------------------ | ----------------------------------------------------------- |
+| `OrderCreated`           | CT → DC           | `new_order`                     | REST `POST /orders`                  | Assigned truck, ETA, and handling durations are known       |
+| `LoadingScheduleCreated` | DC → CT           | `new_order_response`            | REST HTTP `200`                      | Initial schedule calculated                                 |
+| `LoadingScheduleUpdated` | CT → DC           | `incoming_order_update`         | RabbitMQ `dc.1.arrival.update`       | Expected arrival changes                                    |
+| `TruckETAUpdated`        | DC → CT           | `outgoing_order_update`         | RabbitMQ `ct.1.schedule.update`      | Planned dock, loading start, or estimated departure changes |
+| `TruckArrived`           | CT → DC           | `actual_arrival`                | RabbitMQ `dc.1.arrival.actual`       | Truck physically reaches the DC                             |
+| `LoadingCompleted`       | DC → CT           | `outgoing_loading_confirmation` | RabbitMQ `ct.1.loading.confirmation` | Loading finishes for one order                              |
 
 ## Lifecycle from DC perspective
 
@@ -72,19 +76,11 @@ The case description requires the CT to determine handling times. The CT include
 13. A truck incurs a cost of 0.5 CU per second while waiting, loading or unloading.
 14. TCs deterministically calculate their own bids based on expected costs, and do not deviate from these rules to gain an unfair advantage over other TCs.
 
-## Field clarifications
-
-- `arrival_time_at_dc` is the latest ETA (Estimated Time of Arrival), not actual arrival.
-- `actual_arrival_time_at_dc` is a confirmed physical arrival.
-- `start_loading_time` is estimated as well, not actual.
-- `estimated_departure_time` must be no earlier than `start_loading_time` plus `loading_duration` seconds. For example, loading starting at `2026-11-28T10:02:05Z` with a duration of `20` gives an earliest departure of `2026-11-28T10:02:25Z`. `dock_id` identifies the planned dock.
-- `staging_duration` and `loading_duration` are required integer durations in seconds. `staging_duration` may be zero, and `loading_duration` must be positive.
-
 ## Communication rules
 
 ### REST
 
-Use HTTP 400 for invalid requests, 409 for conflicts and 503 for temporary unavailability. E.g., repeated new order requests with the same order ID return HTTP 409.
+Use HTTP 400 for invalid requests, 409 for conflicts and 503 for temporary unavailability. E.g., repeated new order requests with the same order ID return HTTP 409. The REST `Error` schema contains `code` and `message`.
 
 ## RabbitMQ
 
