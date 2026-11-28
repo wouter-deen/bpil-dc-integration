@@ -12,27 +12,17 @@ For both REST and RabbitMQ, map event times to Mendix `Date and time` values int
 2. Add a **Published REST Service** at `rest/integration/v1`. Add the `POST /orders` operation in the DC app, with an import mapping for the request and an export mapping for the response.
 3. In a microflow, validate the imported fields before saving anything to your app's domain model. Return the agreed HTTP status and error body when a request fails.
 4. In the CT app, use **Call REST Service** in a microflow. Store the DC app's base URL in an environment-specific constant.
-5. Test `POST /orders` in Postman before connecting the apps. The API specification tells you what to build; it does not implement the service for you.
+5. Test `POST /orders` in Postman before connecting the apps. The API specification tells you what to build, but it does not implement the service for you.
 
 Mendix docs: [Publish REST](https://docs.mendix.com/refguide/publish-a-rest-service/) · [Consume REST](https://docs.mendix.com/howto/integration/consume-a-rest-service/)
 
-## 2. Set up RabbitMQ
+## 2. Connect to the shared RabbitMQ broker
 
-RabbitMQ holds messages until the receiving app reads them. For example, DC sends a `TruckETAUpdated` message to exchange `bpil.v1` with routing key `ct.1.schedule.update`. The exchange uses that key to put the message in `bpil.ct.1.in`, which CT reads. See the [RabbitMQ setup](rabbitmq-setup.md) for the full list of queues and routing rules.
+Use the [RabbitMQ topology guide](rabbitmq-setup.md#2-route-messages-to-the-right-queue) to find your inbound queue name and the routing keys for messages you send.
 
-One group hosts the shared broker. To try RabbitMQ **on your own machine** first, run:
+The broker operator (group 7) provisions the exchange, queues, and bindings before teams connect. The Mendix connector does not create them. Set `RabbitMQ.Host` to `rabbitmq.unsea.nl` and `RabbitMQ.PortNumber` to `5672`. See the [actor registry](actor-registry.md) for the virtual host and transport security notes. Use the AMQP endpoint.
 
-```sh
-docker run --name bpil-rabbit \
-  -p 127.0.0.1:5672:5672 -p 127.0.0.1:15672:15672 \
-  -e RABBITMQ_DEFAULT_USER=bpil \
-  -e RABBITMQ_DEFAULT_PASS=local-dev-only \
-  -d rabbitmq:3-management
-```
-
-1. Open [the local RabbitMQ dashboard](http://localhost:15672) and sign in with `bpil` / `local-dev-only`.
-2. Create the exchange, queues, and bindings from the [RabbitMQ setup](rabbitmq-setup.md) **before** running the Mendix app. The connector does not create them for you.
-3. For the shared broker, use a host both apps can reach, separate credentials, restricted network access, and TLS where supported. The Docker command only allows local connections. Do not reuse the demo credentials on the shared broker.
+Contact **Wouter Deen** to request your team's credentials and inbound queue. Include your Canvas group number and whether you're a CT or DC team. Don't wait until the last minute. Allow one to two weekdays for a response.
 
 ## 3. Install the Mendix connector
 
@@ -58,7 +48,7 @@ docker run --name bpil-rabbit \
 
 - Send one message and check that it reaches the right queue and updates the receiving app.
 - Try an empty queue, invalid JSON, a duplicate message, and messages arriving out of order.
-- Read the [RabbitMQ setup](rabbitmq-setup.md) for acknowledgement timing and what to do if a message is lost. A broker acknowledgement is not confirmation that the other app saved the update.
+- Check when your connector acknowledges received messages and how it handles failures. A broker acknowledgement does not confirm that the other app saved the update.
 
 The connector instructions were checked against the module documentation on 25 November 2026. Installation and runtime behaviour were not tested in Mendix here, so run these checks before relying on the connector.
 

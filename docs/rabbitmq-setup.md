@@ -1,8 +1,6 @@
 # RabbitMQ topology
 
-This page explains how to set up RabbitMQ and send messages between CT and DC.
-
-You can install the RabbitMQ module from the Mendix Marketplace here: https://marketplace.mendix.com/link/component/305907. I recommend using Maia (Mendix' AI) to help you set it up according to the brief guide below, which contains a brief explanation of how RabbbitMQ works as well.
+This page defines the exchange, queues, and routing keys used by CT and DC. For application configuration, see the [Mendix setup guide](mendix-setup-guide.md).
 
 ## 1. Set up the exchange and queues
 
@@ -25,6 +23,8 @@ Create the queues and their **bindings** (the routing rules below) before sendin
 
 ## 2. Route messages to the right queue
 
+Use your own Canvas group number in your inbound queue name. When publishing, use the receiving team's Canvas group number in the routing key. The table uses group `1` as an example.
+
 | Routing key                 | Destination queue | Sent by | Message type             |
 | --------------------------- | ----------------- | ------- | ------------------------ |
 | `dc.1.arrival.update`       | `bpil.dc.1.in`    | CT      | `LoadingScheduleUpdated` |
@@ -44,5 +44,3 @@ Send messages as **UTF-8 JSON** so set the content type to `application/json`. S
 
 - [RabbitMQ exchanges](https://www.rabbitmq.com/docs/exchanges)
 - [RabbitMQ tutorial: acknowledgements and message durability](https://www.rabbitmq.com/tutorials/tutorial-two-java)
-
-Or just ask your questions to an LLM :)
