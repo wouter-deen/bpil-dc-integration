@@ -32,13 +32,15 @@ Staging and loading are the primary tasks of DCs. Truck location tracking and de
 
 Use of standard units:
 
-- Time fields use standard time units (TU/ticks), where one tick is simulated by one second by all parties (CT, DC, TC).
+- Event times in REST and RabbitMQ use ISO 8601 UTC strings at whole-second precision (`YYYY-MM-DDTHH:mm:ssZ`, e.g., `2026-11-28T10:02:00Z`).
+- Durations use integer seconds, not timestamp strings.
 - Quantity fields use shared standard quantity units (QU).
 - Cost fields use shared standard cost units (CU).
 - Distance fields use shared standard distance units (DU).
-- All time, quantity and distance values are non-negative integers. Cost values may have up to two decimal places.
-- All calculated durations are rounded up to the nearest integer.
-- All parties use the same simulation clock, starting at tick 0, with the CT acting as the authoritative source of simulation time.
+- Duration, quantity and distance values are non-negative integers. Cost values may have up to two decimal places.
+- Round calculated durations up to the nearest whole second.
+
+**Simulation timing.** Schedule simulated events seconds or minutes apart, not hours or days apart, so we can watch the business process integrations run end to end in real time. For example, an order sent at `2026-11-28T10:02:00Z` could have an ETA of `2026-11-28T10:03:00Z`, one real minute later. These are ordinary UTC date-time values: the CT, DC and TC use synchronized system clocks, with no separate simulation clock or shared start time.
 
 ### Rules for standard units
 
@@ -46,8 +48,8 @@ Use of standard units:
 
 The case description requires the CT to determine handling times. The CT includes both durations in the initial `new_order` payload. We propose the following deterministic rules.
 
-1. Staging a quantity $q$ of goods takes $t_s = \lceil q / 2 \rceil$ ticks. E.g., an order of $q = 100$ QU takes 50 ticks to stage.
-2. Loading a quantity $q$ of goods takes $t_l = \lceil q / 5 \rceil$ ticks. E.g., an order of $q = 100$ QU takes 20 ticks to load.
+1. Staging a quantity $q$ of goods takes $t_s = \lceil q / 2 \rceil$ seconds. E.g., an order of $q = 100$ QU takes 50 seconds to stage.
+2. Loading a quantity $q$ of goods takes $t_l = \lceil q / 5 \rceil$ seconds. E.g., an order of $q = 100$ QU takes 20 seconds to load.
 3. Staging may begin before a truck arrives at the DC. Loading may only begin once the goods have been staged, the truck has arrived, and a loading dock is available.
 4. Each loading dock accommodates a maximum of one truck at a time. Each DC has 3 loading docks.
 
@@ -57,8 +59,8 @@ The case description requires the CT to determine handling times. The CT include
 6. A truck carrying exactly 100 QU is considered a full truckload (FTL). A truck carrying less than 100 QU of cargo is considered a less-than-truckload (LTL).
 7. Multiple orders may be transported by the same truck, provided their combined quantity does not exceed the truck's capacity. Individual orders may not be split across trucks.
 8. Each TC initially operates 5 trucks.
-9. Trucks travel at a constant speed of 5 DU per tick, regardless of their load.
-10. Unloading a quantity $q$ of goods at the customer takes $t_u = \lceil q / 5 \rceil$ ticks.
+9. Trucks travel at a constant speed of 5 DU per second, regardless of their load.
+10. Unloading a quantity $q$ of goods at the customer takes $t_u = \lceil q / 5 \rceil$ seconds.
 11. Trucks cannot travel while being loaded or unloaded and cannot execute multiple journeys simultaneously. The CT is responsible for tracking their locations and movements.
 
 #### Costs and revenue
@@ -67,7 +69,7 @@ The case description requires the CT to determine handling times. The CT include
 > The rules below are applicable to TCs and CTs, not DCs. Since this integration contract is written from the DC perspective, CTs and TCs are expected to discuss and finalize these rules among themselves. Note that CTs and DCs do NOT have money, nor do they earn it. CUs are ONLY relevant for selecting the cheapest TC to transport (an) order(s). This is an abstraction, we do not aim to mimic the real world.
 
 12. Operating a truck costs 1 CU per DU travelled, regardless of its load. Both loaded and empty journeys incur this cost.
-13. A truck incurs a cost of 0.5 CU per tick while waiting, loading or unloading.
+13. A truck incurs a cost of 0.5 CU per second while waiting, loading or unloading.
 14. TCs deterministically calculate their own bids based on expected costs, and do not deviate from these rules to gain an unfair advantage over other TCs.
 
 ## Field clarifications
@@ -75,8 +77,8 @@ The case description requires the CT to determine handling times. The CT include
 - `arrival_time_at_dc` is the latest ETA (Estimated Time of Arrival), not actual arrival.
 - `actual_arrival_time_at_dc` is a confirmed physical arrival.
 - `start_loading_time` is estimated as well, not actual.
-- `estimated_departure_time` must be at least start + loading duration. `dock_id` identifies the planned dock
-- `staging_duration` and `loading_duration` are required durations in ticks. `staging_duration` may be zero, and `loading_duration` must be positive.
+- `estimated_departure_time` must be no earlier than `start_loading_time` plus `loading_duration` seconds. For example, loading starting at `2026-11-28T10:02:05Z` with a duration of `20` gives an earliest departure of `2026-11-28T10:02:25Z`. `dock_id` identifies the planned dock.
+- `staging_duration` and `loading_duration` are required integer durations in seconds. `staging_duration` may be zero, and `loading_duration` must be positive.
 
 ## Communication rules
 

@@ -4,7 +4,9 @@ This guide is for both DC and CT teams. Use [REST](integration-contract.md) when
 
 ## 1. Connect the apps with REST
 
-The DC exposes `POST /orders`. The CT calls it with `staging_duration` and `loading_duration` already included in the order.
+The DC exposes `POST /orders`. The CT calls it with `staging_duration` and `loading_duration` already included in the order, as integer seconds.
+
+For both REST and RabbitMQ, map event times to Mendix `Date and time` values internally. Check that the wire format is a UTC string with whole seconds and a trailing `Z` (for example, `2026-11-28T10:02:00Z`), not a local date/time or a number. Use synchronized system clocks.
 
 1. Create an `Integration` module in Mendix. For each JSON request or response your app uses, create a **JSON Structure** and the import or export mapping you need. Prefer non-persistent entities for these temporary messages.
 2. Add a **Published REST Service** at `rest/integration/v1`. Add the `POST /orders` operation in the DC app, with an import mapping for the request and an export mapping for the response.
@@ -50,7 +52,7 @@ docker run --name bpil-rabbit \
 
 1. In a microflow, call `ConsumeFromRabbitMQ` to read one message from your team's queue. Stop if there is no message. Check how the installed action reports empty results and errors.
 2. Save the raw JSON, identify the message type, and import it with the matching mapping. Validate it before applying the update.
-3. Run the microflow from a scheduled event or a loop with a fixed limit when the simulation advances. Avoid overlapping runs. Choose a frequency that keeps the UI responsive and does not distort simulation time. Do not assume a scheduled event can run every tick.
+3. Run the microflow from a scheduled event or a bounded polling loop. Avoid overlapping runs. Choose a frequency that keeps updates responsive, and use the event timestamp in the payload when present rather than the time the message was polled.
 
 ## 5. Test before connecting the teams
 
